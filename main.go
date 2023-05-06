@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
 	"dubinyang1993/go-restful/config"
 	"dubinyang1993/go-restful/mysql"
@@ -46,8 +50,28 @@ func main() {
 		Addr:    addr,
 		Handler: handler,
 	}
-	log.Println("Start to listening the incoming requests on HTTP address" + addr)
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalln("Listen: ", err)
+
+	// async listen server, run exit signal code
+	go func() {
+		log.Println("Start to listening the incoming requests on HTTP address" + addr)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalln("Listen: ", err)
+		}
+	}()
+
+	// receive exit signal
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	log.Println("Shutdown Server...")
+
+	// set timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalln("Server Shutdown:", err)
 	}
+
+	log.Println("Server exited.")
 }
