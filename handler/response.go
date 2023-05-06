@@ -26,7 +26,6 @@ func SendResponse(c *gin.Context, code int, msg string) {
 	})
 }
 
-// TryCatchPanic -
 func TryCatchPanic(c *gin.Context, title string) {
 	if err := recover(); err != nil {
 		buf := make([]byte, 1<<16)

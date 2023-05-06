@@ -5,5 +5,7 @@ import (
 )
 
 func HealthCheck(c *gin.Context) {
+	defer TryCatchPanic(c, "HealthCheck")
+
 	SendResponseData(c, "go-restful is ok")
 }
